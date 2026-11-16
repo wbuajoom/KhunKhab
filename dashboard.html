@@ -24,6 +24,8 @@
   .nav-user { font-size: 13px; color: #6b7280; display: flex; align-items: center; gap: 8px; }
   .btn-logout { background: none; border: 1px solid #e5e7eb; border-radius: 8px; padding: 4px 12px; font-size: 12px; cursor: pointer; color: #6b7280; font-family: inherit; }
   .btn-logout:hover { border-color: #ef4444; color: #ef4444; }
+  .btn-setup { background: none; border: 1px solid #d1fae5; border-radius: 8px; padding: 4px 12px; font-size: 12px; cursor: pointer; color: #059669; font-family: inherit; text-decoration: none; }
+  .btn-setup:hover { background: #d1fae5; }
 
   /* Main */
   .main { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
@@ -102,6 +104,7 @@
 <nav class="nav">
   <div class="nav-brand">📚 คุณคาบ</div>
   <div class="nav-user">
+    <a href="setup.html" class="btn-setup">⚙️ ตั้งค่า</a>
     <span id="nav-name">...</span>
     <button class="btn-logout" onclick="logout()">ออก</button>
   </div>

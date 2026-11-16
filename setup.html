@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตั้งค่าระบบ — คุณคาบ</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Noto Sans Thai',sans-serif;background:#f0fdf4;color:#1a2e1a;min-height:100vh}
+  .topbar{background:#fff;border-bottom:1px solid #d1fae5;padding:14px 20px;display:flex;align-items:center;gap:12px}
+  .topbar a{color:#059669;text-decoration:none;font-size:14px}
+  .topbar h1{font-size:18px;font-weight:700;color:#065f46;flex:1}
+  .container{max-width:720px;margin:0 auto;padding:24px 16px}
+
+  /* Steps nav */
+  .steps{display:flex;gap:0;margin-bottom:28px;border-radius:12px;overflow:hidden;border:1px solid #d1fae5}
+  .step-btn{flex:1;padding:10px 4px;text-align:center;background:#fff;border:none;cursor:pointer;font-size:12px;color:#6b7280;transition:background .15s;border-right:1px solid #d1fae5;font-family:inherit}
+  .step-btn:last-child{border-right:none}
+  .step-btn.active{background:#059669;color:#fff;font-weight:600}
+  .step-btn.done{background:#d1fae5;color:#065f46}
+  .step-btn .num{display:block;font-size:18px;font-weight:700;line-height:1}
+  .step-btn .label{display:block;font-size:11px;margin-top:2px}
+
+  /* Cards */
+  .card{background:#fff;border-radius:16px;padding:24px;margin-bottom:16px;border:1px solid #d1fae5}
+  .card h2{font-size:17px;font-weight:700;color:#065f46;margin-bottom:4px}
+  .card .sub{font-size:13px;color:#6b7280;margin-bottom:20px}
+
+  /* Form */
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px}
+  .field input,.field select{width:100%;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;outline:none;transition:border .15s}
+  .field input:focus,.field select:focus{border-color:#059669}
+  .field .hint{font-size:12px;color:#9ca3af;margin-top:4px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+  /* Buttons */
+  .btn{padding:11px 20px;border-radius:10px;border:none;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;transition:all .15s}
+  .btn-primary{background:#059669;color:#fff}
+  .btn-primary:hover{background:#047857}
+  .btn-primary:disabled{background:#a7f3d0;cursor:not-allowed}
+  .btn-secondary{background:#f3f4f6;color:#374151}
+  .btn-secondary:hover{background:#e5e7eb}
+  .btn-danger{background:#fee2e2;color:#dc2626}
+  .btn-sm{padding:6px 12px;font-size:12px}
+  .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+
+  /* List items */
+  .item-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+  .item{display:flex;align-items:center;padding:12px 14px;background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;gap:10px}
+  .item-info{flex:1}
+  .item-info strong{display:block;font-size:14px}
+  .item-info span{font-size:12px;color:#6b7280}
+  .badge{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
+  .badge-green{background:#d1fae5;color:#065f46}
+  .badge-gray{background:#f3f4f6;color:#6b7280}
+  .badge-yellow{background:#fef3c7;color:#92400e}
+
+  /* Status */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a2e1a;color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.show{opacity:1}
+  .loading{color:#6b7280;font-size:14px;text-align:center;padding:20px}
+
+  /* Section view */
+  .pane{display:none}
+  .pane.active{display:block}
+
+  /* Checkbox row */
+  .check-row{display:flex;align-items:center;gap:10px;padding:8px 0}
+  .check-row input[type=checkbox]{width:18px;height:18px;accent-color:#059669;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="dashboard.html">← กลับ</a>
+  <h1>⚙️ ตั้งค่าระบบ</h1>
+</div>
+
+<div class="container">
+  <!-- Step nav -->
+  <div class="steps">
+    <button class="step-btn active" onclick="goStep(1)" id="s1">
+      <span class="num">1</span><span class="label">ปีการศึกษา</span>
+    </button>
+    <button class="step-btn" onclick="goStep(2)" id="s2">
+      <span class="num">2</span><span class="label">วิชา</span>
+    </button>
+    <button class="step-btn" onclick="goStep(3)" id="s3">
+      <span class="num">3</span><span class="label">กลุ่มเรียน</span>
+    </button>
+    <button class="step-btn" onclick="goStep(4)" id="s4">
+      <span class="num">4</span><span class="label">ช่วงเวลา</span>
+    </button>
+    <button class="step-btn" onclick="goStep(5)" id="s5">
+      <span class="num">5</span><span class="label">ตารางสอน</span>
+    </button>
+  </div>
+
+  <!-- STEP 1: ปีการศึกษา -->
+  <div class="pane active" id="pane1">
+    <div class="card">
+      <h2>ปีการศึกษา</h2>
+      <p class="sub">กำหนดปีการศึกษาที่ใช้งาน และเทอมที่เปิด</p>
+
+      <div id="year-list" class="item-list"></div>
+
+      <div class="field">
+        <label>ชื่อปีการศึกษา เช่น 2567, 2568</label>
+        <input type="text" id="year-name" placeholder="2568">
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>วันเริ่มต้น</label>
+          <input type="date" id="year-start">
+        </div>
+        <div class="field">
+          <label>วันสิ้นสุด</label>
+          <input type="date" id="year-end">
+        </div>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="year-active" checked>
+        <label for="year-active">ตั้งเป็นปีการศึกษาที่ใช้งานอยู่ (Active)</label>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="addYear()">+ เพิ่มปีการศึกษา</button>
+      </div>
+    </div>
+
+    <div class="card" id="semester-card" style="display:none">
+      <h2>เทอมการศึกษา</h2>
+      <p class="sub">เพิ่มเทอมสำหรับปีการศึกษาที่เลือก</p>
+
+      <div class="field">
+        <label>ปีการศึกษา</label>
+        <select id="sem-year"></select>
+      </div>
+      <div id="sem-list" class="item-list"></div>
+      <div class="row">
+        <div class="field">
+          <label>เทอมที่</label>
+          <select id="sem-num">
+            <option value="1">เทอม 1</option>
+            <option value="2">เทอม 2</option>
+            <option value="3">เทอม 3 (พิเศษ)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <div class="check-row" style="margin-top:4px">
+            <input type="checkbox" id="sem-active" checked>
+            <label for="sem-active">Active</label>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>วันเริ่มต้น</label>
+          <input type="date" id="sem-start">
+        </div>
+        <div class="field">
+          <label>วันสิ้นสุด</label>
+          <input type="date" id="sem-end">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="addSemester()">+ เพิ่มเทอม</button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="goStep(2)">ถัดไป →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: วิชา -->
+  <div class="pane" id="pane2">
+    <div class="card">
+      <h2>วิชา (Subjects)</h2>
+      <p class="sub">กำหนดรายวิชาที่สอน</p>
+
+      <div id="subject-list" class="item-list"></div>
+
+      <div class="row">
+        <div class="field">
+          <label>รหัสวิชา</label>
+          <input type="text" id="sub-code" placeholder="ง21101">
+        </div>
+        <div class="field">
+          <label>ชื่อวิชา</label>
+          <input type="text" id="sub-name" placeholder="การงานอาชีพ 1">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>ระดับชั้น</label>
+          <select id="sub-grade">
+            <option value="">ทุกระดับ</option>
+            <option>ม.1</option><option>ม.2</option><option>ม.3</option>
+            <option>ม.4</option><option>ม.5</option><option>ม.6</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>หน่วยกิต</label>
+          <input type="number" id="sub-credit" placeholder="1" min="0.5" step="0.5" value="1">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="addSubject()">+ เพิ่มวิชา</button>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="goStep(1)">← ย้อนกลับ</button>
+      <button class="btn btn-primary" onclick="goStep(3)">ถัดไป →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: กลุ่มเรียน -->
+  <div class="pane" id="pane3">
+    <div class="card">
+      <h2>กลุ่มเรียน (Course Sections)</h2>
+      <p class="sub">สร้างกลุ่มเรียนสำหรับแต่ละวิชา เช่น ง21101 ม.1/1</p>
+
+      <div id="section-list" class="item-list"></div>
+
+      <div class="row">
+        <div class="field">
+          <label>วิชา</label>
+          <select id="sec-subject"></select>
+        </div>
+        <div class="field">
+          <label>ปีการศึกษา</label>
+          <select id="sec-year"></select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>เทอม</label>
+          <select id="sec-sem"></select>
+        </div>
+        <div class="field">
+          <label>ชื่อกลุ่ม เช่น ม.1/1</label>
+          <input type="text" id="sec-name" placeholder="ม.1/1">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="addSection()">+ เพิ่มกลุ่มเรียน</button>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="goStep(2)">← ย้อนกลับ</button>
+      <button class="btn btn-primary" onclick="goStep(4)">ถัดไป →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: ช่วงเวลา -->
+  <div class="pane" id="pane4">
+    <div class="card">
+      <h2>ช่วงเวลาเรียน (Time Slots)</h2>
+      <p class="sub">กำหนดคาบเรียนแต่ละคาบ เช่น คาบ 1 = 08:30–09:20</p>
+
+      <div id="slot-list" class="item-list"></div>
+
+      <div class="row">
+        <div class="field">
+          <label>ชื่อคาบ</label>
+          <input type="text" id="slot-name" placeholder="คาบ 1">
+        </div>
+        <div class="field">
+          <label>ลำดับ</label>
+          <input type="number" id="slot-order" placeholder="1" min="1" value="1">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>เวลาเริ่ม</label>
+          <input type="time" id="slot-start" value="08:30">
+        </div>
+        <div class="field">
+          <label>เวลาสิ้นสุด</label>
+          <input type="time" id="slot-end" value="09:20">
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-secondary btn-sm" onclick="loadDefaultSlots()">📋 โหลดตัวอย่างคาบมาตรฐาน</button>
+        <button class="btn btn-primary" onclick="addSlot()">+ เพิ่มช่วงเวลา</button>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="goStep(3)">← ย้อนกลับ</button>
+      <button class="btn btn-primary" onclick="goStep(5)">ถัดไป →</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: ตารางสอน -->
+  <div class="pane" id="pane5">
+    <div class="card">
+      <h2>ตารางสอน (Schedule)</h2>
+      <p class="sub">กำหนดว่าสอนวิชาไหน วันอะไร คาบไหน</p>
+
+      <div id="schedule-list" class="item-list"></div>
+
+      <div class="field">
+        <label>กลุ่มเรียน</label>
+        <select id="sch-section"></select>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>วันสอน</label>
+          <select id="sch-day">
+            <option value="1">จันทร์</option>
+            <option value="2">อังคาร</option>
+            <option value="3">พุธ</option>
+            <option value="4">พฤหัสบดี</option>
+            <option value="5">ศุกร์</option>
+            <option value="6">เสาร์</option>
+            <option value="0">อาทิตย์</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>คาบ</label>
+          <select id="sch-slot"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>ห้องเรียน/สถานที่ (ไม่บังคับ)</label>
+        <input type="text" id="sch-location" placeholder="ห้อง 211">
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="addSchedule()">+ เพิ่มตารางสอน</button>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="goStep(4)">← ย้อนกลับ</button>
+      <button class="btn btn-primary" onclick="finishSetup()">✅ เสร็จสิ้น ไปหน้าหลัก</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbzzjcklOEs2uKhuV198lVSwkvC3qbQx5HLpF5MucP1rI4AVzLfDYCOna514md5Y5tLL/exec';
+const DAY_NAMES = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+
+let token = localStorage.getItem('kk_token');
+let data = { years:[], semesters:[], subjects:[], sections:[], slots:[], entries:[] };
+let currentStep = 1;
+
+// ─── Init ──────────────────────────────────────────────────────
+if (!token) { location.href = 'index.html'; }
+
+async function callAPI(action, extra = {}) {
+  const r = await fetch(API_URL, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ action, token, ...extra })
+  });
+  return r.json();
+}
+
+async function loadData() {
+  const r = await callAPI('getSetupData');
+  if (!r.ok) { showToast('โหลดข้อมูลไม่ได้: ' + (r.error||''), true); return; }
+  data = r;
+  renderAll();
+}
+
+function renderAll() {
+  renderYears();
+  renderSemesters();
+  renderSubjects();
+  renderSections();
+  renderSlots();
+  renderSchedule();
+  updateSelects();
+}
+
+// ─── Step nav ─────────────────────────────────────────────────
+function goStep(n) {
+  currentStep = n;
+  document.querySelectorAll('.pane').forEach((p,i) => p.classList.toggle('active', i+1===n));
+  document.querySelectorAll('.step-btn').forEach((b,i) => {
+    b.classList.remove('active','done');
+    if (i+1 === n) b.classList.add('active');
+    else if (i+1 < n) b.classList.add('done');
+  });
+  updateSelects();
+}
+
+// ─── YEAR ─────────────────────────────────────────────────────
+function renderYears() {
+  const el = document.getElementById('year-list');
+  if (!data.years.length) { el.innerHTML = '<p class="loading">ยังไม่มีปีการศึกษา</p>'; return; }
+  el.innerHTML = data.years.map(y => `
+    <div class="item">
+      <div class="item-info">
+        <strong>ปีการศึกษา ${y.yearName}</strong>
+        <span>${y.startDate||''} – ${y.endDate||''}</span>
+      </div>
+      <span class="badge ${y.status==='active'?'badge-green':'badge-gray'}">${y.status}</span>
+      <button class="btn btn-danger btn-sm" onclick="delItem('AcademicYears','academicYearId','${y.academicYearId}')">ลบ</button>
+    </div>`).join('');
+  document.getElementById('semester-card').style.display = data.years.length ? '' : 'none';
+}
+
+async function addYear() {
+  const yearName = document.getElementById('year-name').value.trim();
+  if (!yearName) { showToast('กรุณาใส่ชื่อปีการศึกษา', true); return; }
+  const r = await callAPI('saveAcademicYear', {
+    yearName,
+    startDate: document.getElementById('year-start').value,
+    endDate:   document.getElementById('year-end').value,
+    setActive: document.getElementById('year-active').checked,
+  });
+  if (!r.ok) { showToast(r.error||'เกิดข้อผิดพลาด', true); return; }
+  showToast('เพิ่มปีการศึกษา ' + yearName + ' แล้ว');
+  document.getElementById('year-name').value = '';
+  await loadData();
+}
+
+// ─── SEMESTER ─────────────────────────────────────────────────
+function renderSemesters() {
+  const el = document.getElementById('sem-list');
+  if (!data.semesters.length) { el.innerHTML = ''; return; }
+  el.innerHTML = data.semesters.map(s => {
+    const y = data.years.find(y => y.academicYearId === s.academicYearId);
+    return `<div class="item">
+      <div class="item-info">
+        <strong>เทอม ${s.semesterNumber} ปี ${y?y.yearName:s.academicYearId}</strong>
+        <span>${s.startDate||''} – ${s.endDate||''}</span>
+      </div>
+      <span class="badge ${s.status==='active'?'badge-green':'badge-gray'}">${s.status}</span>
+      <button class="btn btn-danger btn-sm" onclick="delItem('Semesters','semesterId','${s.semesterId}')">ลบ</button>
+    </div>`;
+  }).join('');
+}
+
+async function addSemester() {
+  const academicYearId = document.getElementById('sem-year').value;
+  if (!academicYearId) { showToast('กรุณาเลือกปีการศึกษา', true); return; }
+  const r = await callAPI('saveSemester', {
+    academicYearId,
+    semesterNumber: document.getElementById('sem-num').value,
+    startDate:      document.getElementById('sem-start').value,
+    endDate:        document.getElementById('sem-end').value,
+    setActive:      document.getElementById('sem-active').checked,
+  });
+  if (!r.ok) { showToast(r.error||'เกิดข้อผิดพลาด', true); return; }
+  showToast('เพิ่มเทอมแล้ว');
+  await loadData();
+}
+
+// ─── SUBJECT ──────────────────────────────────────────────────
+function renderSubjects() {
+  const el = document.getElementById('subject-list');
+  if (!data.subjects.length) { el.innerHTML = '<p class="loading">ยังไม่มีวิชา</p>'; return; }
+  el.innerHTML = data.subjects.map(s => `
+    <div class="item">
+      <div class="item-info">
+        <strong>${s.subjectCode} ${s.subjectName}</strong>
+        <span>${s.defaultGradeLevel||'ทุกระดับ'} · ${s.credit} หน่วยกิต</span>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="delItem('Subjects','subjectId','${s.subjectId}')">ลบ</button>
+    </div>`).join('');
+}
+
+async function addSubject() {
+  const subjectCode = document.getElementById('sub-code').value.trim();
+  const subjectName = document.getElementById('sub-name').value.trim();
+  if (!subjectCode || !subjectName) { showToast('กรุณาใส่รหัสและชื่อวิชา', true); return; }
+  const r = await callAPI('saveSubject', {
+    subjectCode, subjectName,
+    defaultGradeLevel: document.getElementById('sub-grade').value,
+    credit: document.getElementById('sub-credit').value,
+  });
+  if (!r.ok) { showToast(r.error||'เกิดข้อผิดพลาด', true); return; }
+  showToast('เพิ่มวิชา ' + subjectCode + ' แล้ว');
+  document.getElementById('sub-code').value = '';
+  document.getElementById('sub-name').value = '';
+  await loadData();
+}
+
+// ─── SECTION ──────────────────────────────────────────────────
+function renderSections() {
+  const el = document.getElementById('section-list');
+  if (!data.sections.length) { el.innerHTML = '<p class="loading">ยังไม่มีกลุ่มเรียน</p>'; return; }
+  el.innerHTML = data.sections.map(s => {
+    const sub = data.subjects.find(x => x.subjectId === s.subjectId);
+    return `<div class="item">
+      <div class="item-info">
+        <strong>${sub?sub.subjectCode:''} ${s.sectionName}</strong>
+        <span>${sub?sub.subjectName:s.subjectId}</span>
+      </div>
+      <span class="badge badge-green">${s.status}</span>
+      <button class="btn btn-danger btn-sm" onclick="delItem('CourseSections','courseSectionId','${s.courseSectionId}')">ลบ</button>
+    </div>`;
+  }).join('');
+}
+
+async function addSection() {
+  const subjectId       = document.getElementById('sec-subject').value;
+  const academicYearId  = document.getElementById('sec-year').value;
+  const semesterId      = document.getElementById('sec-sem').value;
+  const sectionName     = document.getElementById('sec-name').value.trim();
+  if (!subjectId||!academicYearId||!semesterId||!sectionName) {
+    showToast('กรุณากรอกข้อมูลให้ครบ', true); return;
+  }
+  const r = await callAPI('saveCourseSection', { subjectId, academicYearId, semesterId, sectionName });
+  if (!r.ok) { showToast(r.error||'เกิดข้อผิดพลาด', true); return; }
+  showToast('เพิ่มกลุ่มเรียน ' + sectionName + ' แล้ว');
+  document.getElementById('sec-name').value = '';
+  await loadData();
+}
+
+// ─── TIMESLOTS ────────────────────────────────────────────────
+const DEFAULT_SLOTS = [
+  {name:'คาบ 1', startTime:'08:30', endTime:'09:20', order:1},
+  {name:'คาบ 2', startTime:'09:20', endTime:'10:10', order:2},
+  {name:'คาบ 3', startTime:'10:10', endTime:'11:00', order:3},
+  {name:'คาบ 4', startTime:'11:00', endTime:'11:50', order:4},
+  {name:'คาบ 5', startTime:'12:40', endTime:'13:30', order:5},
+  {name:'คาบ 6', startTime:'13:30', endTime:'14:20', order:6},
+  {name:'คาบ 7', startTime:'14:20', endTime:'15:10', order:7},
+  {name:'คาบ 8', startTime:'15:10', endTime:'16:00', order:8},
+];
+
+function renderSlots() {
+  const el = document.getElementById('slot-list');
+  if (!data.slots.length) { el.innerHTML = '<p class="loading">ยังไม่มีช่วงเวลา</p>'; return; }
+  const sorted = [...data.slots].sort((a,b) => Number(a.order)-Number(b.order));
+  el.innerHTML = sorted.map(s => `
+    <div class="item">
+      <div class="item-info">
+        <strong>${s.name}</strong>
+        <span>${s.startTime} – ${s.endTime}</span>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="delItem('TimeSlots','timeSlotId','${s.timeSlotId}')">ลบ</button>
+    </div>`).join('');
+}
+
+async function addSlot() {
+  const name      = document.getElementById('slot-name').value.trim();
+  const startTime = document.getElementById('slot-start').value;
+  const endTime   = document.getElementById('slot-end').value;
+  const order     = document.getElementById('slot-order').value;
+  if (!name||!startTime||!endTime) { showToast('กรุณากรอกข้อมูลให้ครบ', true); return; }
+  const r = await callAPI('saveTimeSlot', { name, startTime, endTime, order });
+  if (!r.ok) { showToast(r.error||'เกิดข้อผิดพลาด', true); return; }
+  showToast('เพิ่ม ' + name + ' แล้ว');
+  const nextOrder = Number(order) + 1;
+  document.getElementById('slot-order').value = nextOrder;
+  document.getElementById('slot-name').value = 'คาบ ' + nextOrder;
+  await loadData();
+}
+
+async function loadDefaultSlots() {
+  if (!confirm('โหลดตัวอย่างคาบ 1-8 (08:30–16:00) ใช่ไหม?')) return;
+  for (const s of DEFAULT_SLOTS) {
+    await callAPI('saveTimeSlot', s);
+  }
+  showToast('โหลดตัวอย่างคาบสำเร็จ');
+  await loadData();
+}
+
+// ─── SCHEDULE ─────────────────────────────────────────────────
+function renderSchedule() {
+  const el = document.getElementById('schedule-list');
+  if (!data.entries.length) { el.innerHTML = '<p class="loading">ยังไม่มีตารางสอน</p>'; return; }
+  el.innerHTML = data.entries.map(e => {
+    const sec  = data.sections.find(s => s.courseSectionId === e.courseSectionId);
+    const sub  = sec ? data.subjects.find(x => x.subjectId === sec.subjectId) : null;
+    const slot = data.slots.find(s => s.timeSlotId === e.timeSlotId);
+    return `<div class="item">
+      <div class="item-info">
+        <strong>${DAY_NAMES[Number(e.dayOfWeek)]||e.dayOfWeek} · ${slot?slot.name:e.timeSlotId}</strong>
+        <span>${sub?sub.subjectCode:''} ${sec?sec.sectionName:''} · ${slot?slot.startTime+'-'+slot.endTime:''}</span>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="delItem('ScheduleEntries','scheduleEntryId','${e.scheduleEntryId}')">ลบ</button>
+    </div>`;
+  }).join('');
+}
+
+async function addSchedule() {
+  const courseSectionId = document.getElementById('sch-section').value;
+  const dayOfWeek       = document.getElementById('sch-day').value;
+  const timeSlotId      = document.getElementById('sch-slot').value;
+  const locationText    = document.getElementById('sch-location').value.trim();
+  if (!courseSectionId||!timeSlotId) { showToast('กรุณาเลือกกลุ่มเรียนและคาบ', true); return; }
+  const r = await callAPI('saveScheduleEntry', { courseSectionId, dayOfWeek: Number(dayOfWeek), timeSlotId, locationId: locationText });
+  if (!r.ok) { showToast(r.error||'เกิดข้อผิดพลาด', true); return; }
+  showToast('เพิ่มตารางสอนแล้ว');
+  document.getElementById('sch-location').value = '';
+  await loadData();
+}
+
+// ─── Delete ───────────────────────────────────────────────────
+async function delItem(sheet, idField, idValue) {
+  if (!confirm('ลบข้อมูลนี้?')) return;
+  const r = await callAPI('deleteItem', { sheet, idField, idValue });
+  if (!r.ok) { showToast(r.error||'ลบไม่ได้', true); return; }
+  showToast('ลบแล้ว');
+  await loadData();
+}
+
+// ─── Selects ──────────────────────────────────────────────────
+function updateSelects() {
+  // sem-year
+  const semYear = document.getElementById('sem-year');
+  semYear.innerHTML = data.years.map(y => `<option value="${y.academicYearId}">ปี ${y.yearName}</option>`).join('') || '<option value="">ยังไม่มีปีการศึกษา</option>';
+
+  // sec-subject
+  document.getElementById('sec-subject').innerHTML = data.subjects.map(s => `<option value="${s.subjectId}">${s.subjectCode} ${s.subjectName}</option>`).join('') || '<option value="">ยังไม่มีวิชา</option>';
+  document.getElementById('sec-year').innerHTML = data.years.map(y => `<option value="${y.academicYearId}">ปี ${y.yearName}</option>`).join('') || '<option value="">ยังไม่มีปีการศึกษา</option>';
+  updateSecSem();
+
+  // sch-section
+  document.getElementById('sch-section').innerHTML = data.sections.map(s => {
+    const sub = data.subjects.find(x => x.subjectId === s.subjectId);
+    return `<option value="${s.courseSectionId}">${sub?sub.subjectCode:''} ${s.sectionName}</option>`;
+  }).join('') || '<option value="">ยังไม่มีกลุ่มเรียน</option>';
+
+  // sch-slot
+  const sorted = [...data.slots].sort((a,b) => Number(a.order)-Number(b.order));
+  document.getElementById('sch-slot').innerHTML = sorted.map(s => `<option value="${s.timeSlotId}">${s.name} (${s.startTime}-${s.endTime})</option>`).join('') || '<option value="">ยังไม่มีช่วงเวลา</option>';
+}
+
+function updateSecSem() {
+  const yearId = document.getElementById('sec-year').value;
+  const sems = data.semesters.filter(s => s.academicYearId === yearId);
+  document.getElementById('sec-sem').innerHTML = sems.map(s => `<option value="${s.semesterId}">เทอม ${s.semesterNumber}</option>`).join('') || '<option value="">ยังไม่มีเทอม</option>';
+}
+document.getElementById('sec-year').addEventListener('change', updateSecSem);
+
+// ─── Finish ───────────────────────────────────────────────────
+function finishSetup() {
+  localStorage.removeItem('kk_bootstrap'); // force refresh
+  location.href = 'dashboard.html';
+}
+
+// ─── Toast ────────────────────────────────────────────────────
+function showToast(msg, isErr=false) {
+  const t = document.getElementById('toast');
+  t.textContent = (isErr ? '❌ ' : '✅ ') + msg;
+  t.style.background = isErr ? '#7f1d1d' : '#1a2e1a';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── Boot ─────────────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>

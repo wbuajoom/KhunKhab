@@ -445,7 +445,7 @@ function renderSemesters() {
     const y = data.years.find(y => y.academicYearId === s.academicYearId);
     return `<div class="item">
       <div class="item-info">
-        <strong>เทอม ${s.semesterNumber} ปี ${y ? (y.yearName||y.year) : s.academicYearId}</strong>
+        <strong>เทอม ${s.semesterNumber||s.semester} ปี ${y ? (y.yearName||y.year) : s.academicYearId}</strong>
         <span>${s.startDate||''} – ${s.endDate||''}</span>
       </div>
       <span class="badge ${s.status==='active'?'badge-green':'badge-gray'}">${s.status}</span>
@@ -646,7 +646,7 @@ function updateSelects() {
 function updateSecSem() {
   const yearId = document.getElementById('sec-year').value;
   const sems = data.semesters.filter(s => s.academicYearId === yearId);
-  document.getElementById('sec-sem').innerHTML = sems.map(s => `<option value="${s.semesterId}">เทอม ${s.semesterNumber}</option>`).join('') || '<option value="">ยังไม่มีเทอม</option>';
+  document.getElementById('sec-sem').innerHTML = sems.map(s => `<option value="${s.semesterId}">เทอม ${s.semesterNumber||s.semester}</option>`).join('') || '<option value="">ยังไม่มีเทอม</option>';
 }
 document.getElementById('sec-year').addEventListener('change', updateSecSem);
 

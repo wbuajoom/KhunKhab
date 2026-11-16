@@ -413,7 +413,7 @@ function renderYears() {
   el.innerHTML = data.years.map(y => `
     <div class="item">
       <div class="item-info">
-        <strong>ปีการศึกษา ${y.yearName}</strong>
+        <strong>ปีการศึกษา ${y.yearName || y.year || y.academicYearId}</strong>
         <span>${y.startDate||''} – ${y.endDate||''}</span>
       </div>
       <span class="badge ${y.status==='active'?'badge-green':'badge-gray'}">${y.status}</span>
@@ -445,7 +445,7 @@ function renderSemesters() {
     const y = data.years.find(y => y.academicYearId === s.academicYearId);
     return `<div class="item">
       <div class="item-info">
-        <strong>เทอม ${s.semesterNumber} ปี ${y?y.yearName:s.academicYearId}</strong>
+        <strong>เทอม ${s.semesterNumber} ปี ${y ? (y.yearName||y.year) : s.academicYearId}</strong>
         <span>${s.startDate||''} – ${s.endDate||''}</span>
       </div>
       <span class="badge ${s.status==='active'?'badge-green':'badge-gray'}">${s.status}</span>
@@ -625,11 +625,11 @@ async function delItem(sheet, idField, idValue) {
 function updateSelects() {
   // sem-year
   const semYear = document.getElementById('sem-year');
-  semYear.innerHTML = data.years.map(y => `<option value="${y.academicYearId}">ปี ${y.yearName}</option>`).join('') || '<option value="">ยังไม่มีปีการศึกษา</option>';
+  semYear.innerHTML = data.years.map(y => `<option value="${y.academicYearId}">ปี ${y.yearName || y.year}</option>`).join('') || '<option value="">ยังไม่มีปีการศึกษา</option>';
 
   // sec-subject
   document.getElementById('sec-subject').innerHTML = data.subjects.map(s => `<option value="${s.subjectId}">${s.subjectCode} ${s.subjectName}</option>`).join('') || '<option value="">ยังไม่มีวิชา</option>';
-  document.getElementById('sec-year').innerHTML = data.years.map(y => `<option value="${y.academicYearId}">ปี ${y.yearName}</option>`).join('') || '<option value="">ยังไม่มีปีการศึกษา</option>';
+  document.getElementById('sec-year').innerHTML = data.years.map(y => `<option value="${y.academicYearId}">ปี ${y.yearName||y.year}</option>`).join('') || '<option value="">ยังไม่มีปีการศึกษา</option>';
   updateSecSem();
 
   // sch-section

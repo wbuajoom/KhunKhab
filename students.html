@@ -276,18 +276,26 @@ let currentTab = 'section';
 // ─── API ──────────────────────────────────────────────────────
 async function callAPI(action, extra = {}) {
   const readActions = ['getBootstrap','getSetupData','getAttendanceRoster','getScorebook','getStudents'];
+  let res;
   if (readActions.includes(action)) {
     const params = new URLSearchParams({ action, token });
     Object.entries(extra).forEach(([k,v]) => params.set(k, typeof v==='object' ? JSON.stringify(v) : v));
     const r = await fetch(API_URL + '?' + params.toString());
-    return r.json();
+    res = await r.json();
+  } else {
+    const r = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action, token, ...extra }),
+    });
+    res = await r.json();
   }
-  const r = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action, token, ...extra }),
-  });
-  return r.json();
+  if (!res.ok && res.error === 'Unauthorized') {
+    localStorage.clear();
+    location.href = 'index.html';
+    return res;
+  }
+  return res;
 }
 
 // ─── Init ─────────────────────────────────────────────────────

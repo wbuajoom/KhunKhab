@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>นักเรียน — คุณคาบ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans Thai',sans-serif;background:#f0fdf4;color:#1a2e1a;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid #d1fae5;padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+.topbar a{color:#059669;text-decoration:none;font-size:14px;white-space:nowrap}
+.topbar h1{font-size:18px;font-weight:700;color:#065f46;flex:1}
+.container{max-width:800px;margin:0 auto;padding:20px 16px}
+
+/* Tabs */
+.tabs{display:flex;gap:0;background:#fff;border-radius:12px;border:1px solid #d1fae5;overflow:hidden;margin-bottom:20px}
+.tab{flex:1;padding:11px;text-align:center;background:none;border:none;cursor:pointer;font-size:14px;font-weight:500;color:#6b7280;font-family:inherit;border-right:1px solid #d1fae5;transition:background .15s}
+.tab:last-child{border-right:none}
+.tab.active{background:#059669;color:#fff;font-weight:700}
+
+/* Card */
+.card{background:#fff;border-radius:16px;padding:20px;margin-bottom:16px;border:1px solid #d1fae5}
+.card h2{font-size:16px;font-weight:700;color:#065f46;margin-bottom:4px}
+.card .sub{font-size:13px;color:#9ca3af;margin-bottom:16px}
+
+/* Form */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:5px}
+.field input,.field select{width:100%;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;outline:none;transition:border .15s}
+.field input:focus,.field select:focus{border-color:#059669}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+/* Buttons */
+.btn{padding:10px 18px;border-radius:10px;border:none;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;transition:all .15s}
+.btn-primary{background:#059669;color:#fff}
+.btn-primary:hover{background:#047857}
+.btn-primary:disabled{background:#a7f3d0;cursor:not-allowed}
+.btn-secondary{background:#f3f4f6;color:#374151}
+.btn-secondary:hover{background:#e5e7eb}
+.btn-danger{background:#fee2e2;color:#dc2626;border:none}
+.btn-danger:hover{background:#fecaca}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn-ghost{background:none;border:1.5px solid #d1fae5;color:#059669}
+.btn-ghost:hover{background:#f0fdf4}
+.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+
+/* Student list */
+.search-bar{display:flex;gap:10px;margin-bottom:14px}
+.search-bar input{flex:1;padding:10px 14px;border:1.5px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;outline:none}
+.search-bar input:focus{border-color:#059669}
+.student-list{display:flex;flex-direction:column;gap:6px}
+.student-item{display:flex;align-items:center;padding:12px 14px;background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;gap:10px;cursor:pointer;transition:background .1s}
+.student-item:hover{background:#f0fdf4;border-color:#d1fae5}
+.student-item.selected{background:#ecfdf5;border-color:#059669}
+.stu-num{width:36px;text-align:center;font-size:13px;font-weight:700;color:#059669;background:#d1fae5;border-radius:8px;padding:4px 0;flex-shrink:0}
+.stu-info{flex:1}
+.stu-info strong{display:block;font-size:14px;color:#111827}
+.stu-info span{font-size:12px;color:#9ca3af}
+.stu-id{font-size:12px;color:#6b7280;font-family:monospace}
+
+/* Section selector */
+.section-select{background:#fff;border:1.5px solid #d1fae5;border-radius:10px;padding:10px 14px;font-size:14px;font-family:inherit;width:100%;margin-bottom:14px;outline:none;color:#065f46;font-weight:600}
+
+/* Stats */
+.stats{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.stat{background:#fff;border:1px solid #d1fae5;border-radius:10px;padding:10px 16px;text-align:center;flex:1;min-width:80px}
+.stat-num{font-size:22px;font-weight:700;color:#059669}
+.stat-label{font-size:11px;color:#9ca3af;margin-top:2px}
+
+/* CSV area */
+.csv-area{width:100%;min-height:120px;padding:12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:13px;font-family:monospace;resize:vertical;outline:none}
+.csv-area:focus{border-color:#059669}
+.csv-preview{margin-top:12px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f0fdf4;color:#065f46;font-weight:600;padding:8px 10px;text-align:left;border-bottom:2px solid #d1fae5}
+td{padding:8px 10px;border-bottom:1px solid #f3f4f6;color:#374151}
+tr:hover td{background:#f9fafb}
+.row-err td{background:#fef2f2;color:#dc2626}
+
+/* Pane */
+.pane{display:none}
+.pane.active{display:block}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:16px;color:#065f46}
+
+/* Loading / empty */
+.loading{color:#9ca3af;font-size:14px;text-align:center;padding:24px}
+.empty{text-align:center;padding:32px;color:#9ca3af;font-size:14px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a2e1a;color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+@media(max-width:600px){
+  .row,.row3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="dashboard.html">← กลับ</a>
+  <h1>👨‍🎓 นักเรียน</h1>
+  <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ เพิ่ม</button>
+</div>
+
+<div class="container">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('section')" id="tab-section">รายชื่อในวิชา</button>
+    <button class="tab" onclick="switchTab('all')" id="tab-all">นักเรียนทั้งหมด</button>
+    <button class="tab" onclick="switchTab('import')" id="tab-import">Import CSV</button>
+  </div>
+
+  <!-- TAB: รายชื่อในวิชา -->
+  <div class="pane active" id="pane-section">
+    <select class="section-select" id="section-select" onchange="loadSectionStudents()">
+      <option value="">— เลือกกลุ่มเรียน —</option>
+    </select>
+
+    <div class="stats" id="section-stats" style="display:none">
+      <div class="stat"><div class="stat-num" id="stat-count">0</div><div class="stat-label">นักเรียน</div></div>
+    </div>
+
+    <div class="actions" style="margin-bottom:12px;justify-content:flex-start">
+      <button class="btn btn-ghost btn-sm" onclick="openAddToSectionModal()" id="btn-add-to-section" style="display:none">+ เพิ่มนักเรียนเข้าวิชานี้</button>
+    </div>
+
+    <div id="section-student-list" class="student-list">
+      <div class="empty">เลือกกลุ่มเรียนเพื่อดูรายชื่อ</div>
+    </div>
+  </div>
+
+  <!-- TAB: นักเรียนทั้งหมด -->
+  <div class="pane" id="pane-all">
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="ค้นหาชื่อ หรือรหัสนักเรียน..." oninput="filterStudents()">
+    </div>
+    <div id="all-student-list" class="student-list">
+      <div class="loading">กำลังโหลด...</div>
+    </div>
+  </div>
+
+  <!-- TAB: Import CSV -->
+  <div class="pane" id="pane-import">
+    <div class="card">
+      <h2>Import นักเรียนจาก CSV</h2>
+      <p class="sub">วางข้อมูลในรูปแบบ CSV หรืออัปโหลดไฟล์</p>
+
+      <div class="field">
+        <label>เพิ่มเข้ากลุ่มเรียน (ไม่บังคับ)</label>
+        <select id="import-section" class="section-select" style="margin:0">
+          <option value="">— ไม่เพิ่มเข้ากลุ่มเรียน —</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>รูปแบบ CSV (คั่นด้วย comma หรือ tab)</label>
+        <div style="font-size:12px;color:#9ca3af;margin-bottom:6px">
+          ลำดับ column: <code>เลขที่, รหัสนักเรียน, ชื่อ, นามสกุล, ชื่อเล่น, เพศ</code><br>
+          (เลขที่ และชื่อเล่น เพศ — ไม่บังคับ)
+        </div>
+        <textarea class="csv-area" id="csv-input" placeholder="1,02341,สมชาย,ใจดี,ชาย,ชาย&#10;2,02342,สมหญิง,รักเรียน,หญิง,หญิง"></textarea>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <label class="btn btn-secondary" style="cursor:pointer">
+          📁 เลือกไฟล์
+          <input type="file" accept=".csv,.txt" style="display:none" onchange="readFile(this)">
+        </label>
+        <button class="btn btn-primary" onclick="parseCSV()">ตรวจสอบข้อมูล →</button>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div id="import-preview" style="display:none">
+      <div class="card">
+        <h2>ตรวจสอบข้อมูลก่อน Import</h2>
+        <div id="import-summary" class="sub"></div>
+        <div class="csv-preview">
+          <table id="preview-table">
+            <thead><tr><th>#</th><th>รหัส</th><th>ชื่อ</th><th>นามสกุล</th><th>ชื่อเล่น</th><th>เพศ</th><th>สถานะ</th></tr></thead>
+            <tbody id="preview-body"></tbody>
+          </table>
+        </div>
+        <div class="actions">
+          <button class="btn btn-secondary" onclick="document.getElementById('import-preview').style.display='none'">ยกเลิก</button>
+          <button class="btn btn-primary" id="btn-confirm-import" onclick="confirmImport()">✅ Import เลย</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: เพิ่มนักเรียน -->
+<div class="modal-bg" id="modal-add">
+  <div class="modal">
+    <h3>เพิ่มนักเรียนใหม่</h3>
+    <div class="row">
+      <div class="field">
+        <label>รหัสนักเรียน <span style="color:#dc2626">*</span></label>
+        <input type="text" id="add-sid" placeholder="02341" maxlength="10">
+      </div>
+      <div class="field">
+        <label>เพศ</label>
+        <select id="add-gender">
+          <option value="">—</option>
+          <option value="ชาย">ชาย</option>
+          <option value="หญิง">หญิง</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>ชื่อ <span style="color:#dc2626">*</span></label>
+        <input type="text" id="add-fname" placeholder="สมชาย">
+      </div>
+      <div class="field">
+        <label>นามสกุล <span style="color:#dc2626">*</span></label>
+        <input type="text" id="add-lname" placeholder="ใจดี">
+      </div>
+    </div>
+    <div class="field">
+      <label>ชื่อเล่น</label>
+      <input type="text" id="add-nick" placeholder="ชาย">
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveStudent()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: เพิ่มนักเรียนเข้าวิชา -->
+<div class="modal-bg" id="modal-add-to-section">
+  <div class="modal">
+    <h3>เพิ่มนักเรียนเข้ากลุ่มเรียน</h3>
+    <div class="field">
+      <label>ค้นหานักเรียน</label>
+      <input type="text" id="modal-search" placeholder="พิมพ์ชื่อหรือรหัส..." oninput="filterModalStudents()">
+    </div>
+    <div id="modal-student-list" class="student-list" style="max-height:300px;overflow-y:auto;margin-bottom:12px"></div>
+    <div class="field">
+      <label>เลขที่ในวิชา</label>
+      <input type="number" id="modal-stunum" placeholder="1" min="1">
+    </div>
+    <div id="modal-selected" style="font-size:13px;color:#059669;min-height:20px;margin-bottom:8px"></div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-to-section')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="addToSection()">เพิ่มเข้าวิชา</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbzzjcklOEs2uKhuV198lVSwkvC3qbQx5HLpF5MucP1rI4AVzLfDYCOna514md5Y5tLL/exec';
+const token = localStorage.getItem('kk_token');
+if (!token) location.href = 'index.html';
+
+let allStudents = [];
+let sectionStudents = [];
+let allSections = [];
+let selectedStudentId = null;
+let parsedRows = [];
+let currentTab = 'section';
+
+// ─── API ──────────────────────────────────────────────────────
+async function callAPI(action, extra = {}) {
+  const readActions = ['getBootstrap','getSetupData','getAttendanceRoster','getScorebook','getStudents'];
+  if (readActions.includes(action)) {
+    const params = new URLSearchParams({ action, token });
+    Object.entries(extra).forEach(([k,v]) => params.set(k, typeof v==='object' ? JSON.stringify(v) : v));
+    const r = await fetch(API_URL + '?' + params.toString());
+    return r.json();
+  }
+  const r = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action, token, ...extra }),
+  });
+  return r.json();
+}
+
+// ─── Init ─────────────────────────────────────────────────────
+async function init() {
+  const setup = await callAPI('getSetupData');
+  if (!setup.ok) { showToast('โหลดข้อมูลไม่ได้', true); return; }
+
+  allSections = setup.sections || [];
+  const subMap = {};
+  (setup.subjects||[]).forEach(s => subMap[s.subjectId] = s);
+
+  const opts = allSections.map(s => {
+    const sub = subMap[s.subjectId] || {};
+    return `<option value="${s.courseSectionId}">${sub.subjectCode||''} ${s.sectionName}</option>`;
+  }).join('');
+
+  document.getElementById('section-select').innerHTML = '<option value="">— เลือกกลุ่มเรียน —</option>' + opts;
+  document.getElementById('import-section').innerHTML = '<option value="">— ไม่เพิ่มเข้ากลุ่มเรียน —</option>' + opts;
+
+  // โหลดนักเรียนทั้งหมดไว้ก่อน
+  const r = await callAPI('getStudents');
+  if (r.ok) {
+    allStudents = r.students || [];
+    renderAllStudents();
+  }
+
+  // ถ้า localStorage มี section ค้างไว้
+  const saved = localStorage.getItem('kk_current_section');
+  if (saved) {
+    document.getElementById('section-select').value = saved;
+    loadSectionStudents();
+  }
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('pane-' + tab).classList.add('active');
+}
+
+// ─── Section students ─────────────────────────────────────────
+async function loadSectionStudents() {
+  const sectionId = document.getElementById('section-select').value;
+  const list = document.getElementById('section-student-list');
+  const btn = document.getElementById('btn-add-to-section');
+  const stats = document.getElementById('section-stats');
+
+  if (!sectionId) {
+    list.innerHTML = '<div class="empty">เลือกกลุ่มเรียนเพื่อดูรายชื่อ</div>';
+    btn.style.display = 'none'; stats.style.display = 'none';
+    return;
+  }
+  localStorage.setItem('kk_current_section', sectionId);
+  btn.style.display = '';
+  list.innerHTML = '<div class="loading">กำลังโหลด...</div>';
+
+  const r = await callAPI('getStudents', { courseSectionId: sectionId });
+  if (!r.ok) { list.innerHTML = '<div class="empty">โหลดไม่ได้</div>'; return; }
+
+  sectionStudents = r.students || [];
+  document.getElementById('stat-count').textContent = sectionStudents.length;
+  stats.style.display = sectionStudents.length ? 'flex' : 'none';
+
+  if (!sectionStudents.length) {
+    list.innerHTML = '<div class="empty">ยังไม่มีนักเรียนในกลุ่มเรียนนี้<br><small>กด "+ เพิ่มนักเรียนเข้าวิชานี้" เพื่อเพิ่ม</small></div>';
+    return;
+  }
+
+  list.innerHTML = sectionStudents.map(s => `
+    <div class="student-item">
+      <div class="stu-num">${s.studentNumber||'—'}</div>
+      <div class="stu-info">
+        <strong>${s.firstName} ${s.lastName}${s.nickname ? ' ('+s.nickname+')' : ''}</strong>
+        <span class="stu-id">${s.schoolStudentId||s.studentId}</span>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="removeFromSection('${s.courseStudentId}',event)">ลบออก</button>
+    </div>`).join('');
+}
+
+async function removeFromSection(courseStudentId, e) {
+  e.stopPropagation();
+  if (!confirm('ลบนักเรียนคนนี้ออกจากกลุ่มเรียน?')) return;
+  const r = await callAPI('removeStudentFromSection', { courseStudentId });
+  if (!r.ok) { showToast(r.error||'ลบไม่ได้', true); return; }
+  showToast('ลบออกจากกลุ่มเรียนแล้ว');
+  loadSectionStudents();
+}
+
+// ─── All students ─────────────────────────────────────────────
+function renderAllStudents(filter = '') {
+  const list = document.getElementById('all-student-list');
+  let arr = allStudents;
+  if (filter) {
+    const q = filter.toLowerCase();
+    arr = arr.filter(s =>
+      (s.firstName||'').toLowerCase().includes(q) ||
+      (s.lastName||'').toLowerCase().includes(q) ||
+      (s.schoolStudentId||'').includes(q) ||
+      (s.nickname||'').toLowerCase().includes(q)
+    );
+  }
+  if (!arr.length) { list.innerHTML = '<div class="empty">ไม่พบนักเรียน</div>'; return; }
+  list.innerHTML = arr.map(s => `
+    <div class="student-item">
+      <div class="stu-info">
+        <strong>${s.firstName} ${s.lastName}${s.nickname ? ' ('+s.nickname+')' : ''}</strong>
+        <span class="stu-id">${s.schoolStudentId||''} · ${s.gender||''}</span>
+      </div>
+    </div>`).join('');
+}
+
+function filterStudents() {
+  renderAllStudents(document.getElementById('search-input').value);
+}
+
+// ─── Add student modal ────────────────────────────────────────
+function openAddModal() {
+  document.getElementById('add-sid').value = '';
+  document.getElementById('add-fname').value = '';
+  document.getElementById('add-lname').value = '';
+  document.getElementById('add-nick').value = '';
+  openModal('modal-add');
+}
+
+async function saveStudent() {
+  const schoolStudentId = document.getElementById('add-sid').value.trim();
+  const firstName = document.getElementById('add-fname').value.trim();
+  const lastName  = document.getElementById('add-lname').value.trim();
+  const nickname  = document.getElementById('add-nick').value.trim();
+  const gender    = document.getElementById('add-gender').value;
+  if (!schoolStudentId || !firstName || !lastName) {
+    showToast('กรุณากรอกรหัส ชื่อ และนามสกุล', true); return;
+  }
+  const r = await callAPI('saveStudent', { schoolStudentId, firstName, lastName, nickname, gender });
+  if (!r.ok) { showToast(r.error||'เกิดข้อผิดพลาด', true); return; }
+  showToast('เพิ่ม ' + firstName + ' ' + lastName + ' แล้ว');
+  closeModal('modal-add');
+  // refresh
+  const all = await callAPI('getStudents');
+  if (all.ok) { allStudents = all.students; renderAllStudents(); }
+}
+
+// ─── Add to section modal ─────────────────────────────────────
+function openAddToSectionModal() {
+  selectedStudentId = null;
+  document.getElementById('modal-search').value = '';
+  document.getElementById('modal-stunum').value = (sectionStudents.length + 1) || 1;
+  document.getElementById('modal-selected').textContent = '';
+  renderModalStudents(allStudents);
+  openModal('modal-add-to-section');
+}
+
+function renderModalStudents(arr) {
+  const list = document.getElementById('modal-student-list');
+  // กรองนักเรียนที่อยู่ใน section แล้วออก
+  const inSection = new Set(sectionStudents.map(s => s.studentId));
+  const filtered = arr.filter(s => !inSection.has(s.studentId));
+  if (!filtered.length) { list.innerHTML = '<div class="empty">ไม่พบ</div>'; return; }
+  list.innerHTML = filtered.map(s => `
+    <div class="student-item ${selectedStudentId===s.studentId?'selected':''}"
+         onclick="selectStudent('${s.studentId}','${s.firstName} ${s.lastName}')">
+      <div class="stu-info">
+        <strong>${s.firstName} ${s.lastName}${s.nickname?' ('+s.nickname+')':''}</strong>
+        <span class="stu-id">${s.schoolStudentId||''}</span>
+      </div>
+    </div>`).join('');
+}
+
+function filterModalStudents() {
+  const q = document.getElementById('modal-search').value.toLowerCase();
+  const arr = q ? allStudents.filter(s =>
+    (s.firstName||'').toLowerCase().includes(q) ||
+    (s.lastName||'').toLowerCase().includes(q) ||
+    (s.schoolStudentId||'').includes(q)
+  ) : allStudents;
+  renderModalStudents(arr);
+}
+
+function selectStudent(id, name) {
+  selectedStudentId = id;
+  document.getElementById('modal-selected').textContent = '✅ เลือก: ' + name;
+  filterModalStudents();
+}
+
+async function addToSection() {
+  const sectionId = document.getElementById('section-select').value;
+  if (!sectionId) { showToast('กรุณาเลือกกลุ่มเรียนก่อน', true); return; }
+  if (!selectedStudentId) { showToast('กรุณาเลือกนักเรียนก่อน', true); return; }
+  const studentNumber = document.getElementById('modal-stunum').value;
+  const r = await callAPI('addStudentToSection', {
+    courseSectionId: sectionId,
+    studentId: selectedStudentId,
+    studentNumber: studentNumber || ''
+  });
+  if (!r.ok) { showToast(r.error||'เกิดข้อผิดพลาด', true); return; }
+  showToast('เพิ่มนักเรียนเข้ากลุ่มเรียนแล้ว');
+  closeModal('modal-add-to-section');
+  loadSectionStudents();
+}
+
+// ─── Import CSV ───────────────────────────────────────────────
+function readFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { document.getElementById('csv-input').value = e.target.result; };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseCSV() {
+  const raw = document.getElementById('csv-input').value.trim();
+  if (!raw) { showToast('กรุณาวางข้อมูล CSV', true); return; }
+
+  const lines = raw.split('\n').filter(l => l.trim());
+  parsedRows = [];
+  const tbody = document.getElementById('preview-body');
+  tbody.innerHTML = '';
+  let errCount = 0;
+
+  lines.forEach((line, i) => {
+    // รองรับ comma และ tab
+    const cols = line.includes('\t') ? line.split('\t') : line.split(',');
+    const clean = cols.map(c => c.trim().replace(/^["']|["']$/g, ''));
+
+    // พยายาม detect format
+    // ถ้า 6 col: studentNumber, schoolStudentId, firstName, lastName, nickname, gender
+    // ถ้า 5 col: schoolStudentId, firstName, lastName, nickname, gender
+    // ถ้า 4 col: schoolStudentId, firstName, lastName, nickname
+    // ถ้า 3 col: schoolStudentId, firstName, lastName
+    let studentNumber='', schoolStudentId='', firstName='', lastName='', nickname='', gender='';
+    let err = '';
+
+    if (clean.length >= 6) {
+      [studentNumber, schoolStudentId, firstName, lastName, nickname, gender] = clean;
+    } else if (clean.length === 5) {
+      [schoolStudentId, firstName, lastName, nickname, gender] = clean;
+    } else if (clean.length === 4) {
+      [schoolStudentId, firstName, lastName, nickname] = clean;
+    } else if (clean.length === 3) {
+      [schoolStudentId, firstName, lastName] = clean;
+    } else {
+      err = 'ข้อมูลน้อยเกินไป';
+      errCount++;
+    }
+
+    if (!err && (!schoolStudentId || !firstName || !lastName)) {
+      err = 'ขาดรหัสหรือชื่อ';
+      errCount++;
+    }
+
+    const row = { studentNumber, schoolStudentId, firstName, lastName, nickname, gender, _err: err };
+    parsedRows.push(row);
+
+    const tr = document.createElement('tr');
+    if (err) tr.className = 'row-err';
+    tr.innerHTML = `<td>${i+1}</td><td>${schoolStudentId}</td><td>${firstName}</td><td>${lastName}</td><td>${nickname}</td><td>${gender}</td><td>${err||'✅'}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  const good = parsedRows.filter(r => !r._err).length;
+  document.getElementById('import-summary').innerHTML =
+    `พบ <strong>${parsedRows.length}</strong> แถว — นำเข้าได้ <strong style="color:#059669">${good}</strong> แถว${errCount?' — มีข้อผิดพลาด <strong style="color:#dc2626">'+errCount+'</strong> แถว':''}`;
+  document.getElementById('import-preview').style.display = '';
+  document.getElementById('btn-confirm-import').disabled = good === 0;
+}
+
+async function confirmImport() {
+  const good = parsedRows.filter(r => !r._err);
+  if (!good.length) return;
+  const sectionId = document.getElementById('import-section').value;
+  const btn = document.getElementById('btn-confirm-import');
+  btn.disabled = true; btn.textContent = 'กำลัง Import...';
+
+  const r = await callAPI('importStudents', {
+    students: good,
+    courseSectionId: sectionId || null
+  });
+
+  btn.disabled = false; btn.textContent = '✅ Import เลย';
+
+  if (!r.ok) { showToast(r.error||'เกิดข้อผิดพลาด', true); return; }
+  showToast(`Import สำเร็จ: เพิ่ม ${r.added} คน, อัปเดต ${r.updated} คน`);
+  document.getElementById('csv-input').value = '';
+  document.getElementById('import-preview').style.display = 'none';
+
+  // refresh
+  const all = await callAPI('getStudents');
+  if (all.ok) { allStudents = all.students; renderAllStudents(); }
+  if (sectionId) { document.getElementById('section-select').value = sectionId; loadSectionStudents(); }
+}
+
+// ─── Modal helpers ────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-bg').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ─── Toast ────────────────────────────────────────────────────
+function showToast(msg, isErr=false) {
+  const t = document.getElementById('toast');
+  t.textContent = (isErr?'❌ ':'✅ ') + msg;
+  t.style.background = isErr ? '#7f1d1d' : '#1a2e1a';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+init();
+</script>
+</body>
+</html>

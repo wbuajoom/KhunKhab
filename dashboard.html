@@ -159,8 +159,15 @@ document.getElementById('date-label').textContent = dateStr;
 async function load() {
   try {
     const res = await callAPI('getBootstrap');
-    if (!res.ok) throw new Error(res.error);
-
+    if (!res.ok) {
+      if (res.error === 'Unauthorized') {
+        // Token หมดอายุ — ล้างแล้ว login ใหม่
+        localStorage.clear();
+        location.href = 'index.html';
+        return;
+      }
+      throw new Error(res.error);
+    }
     localStorage.setItem('kk_bootstrap', JSON.stringify(res));
     renderSchedule(res.todaySchedule);
   } catch(err) {

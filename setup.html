@@ -353,12 +353,28 @@ let currentStep = 1;
 if (!token) { location.href = 'index.html'; }
 
 async function callAPI(action, extra = {}) {
+  // GET สำหรับ read actions (ไม่มี CORS preflight)
+  const readActions = ['getBootstrap','getSetupData','getAttendanceRoster','getScorebook'];
+  if (readActions.includes(action)) {
+    const params = new URLSearchParams({ action, token, ...flattenParams(extra) });
+    const r = await fetch(API_URL + '?' + params.toString());
+    return r.json();
+  }
+  // POST สำหรับ write actions — ใช้ text/plain เพื่อหลีกเลี่ยง preflight
   const r = await fetch(API_URL, {
     method: 'POST',
-    headers: {'Content-Type':'application/json'},
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify({ action, token, ...extra })
   });
   return r.json();
+}
+
+function flattenParams(obj) {
+  const out = {};
+  for (const [k, v] of Object.entries(obj)) {
+    out[k] = typeof v === 'object' ? JSON.stringify(v) : v;
+  }
+  return out;
 }
 
 async function loadData() {

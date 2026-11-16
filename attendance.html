@@ -370,8 +370,16 @@ async function processQR(qrData) {
 // ─── Helpers ──────────────────────────────────────────────────
 
 async function callAPI(action, extra = {}) {
+  const readActions = ['getBootstrap','getSetupData','getAttendanceRoster','getScorebook'];
+  if (readActions.includes(action)) {
+    const params = new URLSearchParams({ action, token });
+    Object.entries(extra).forEach(([k,v]) => params.set(k, typeof v==='object' ? JSON.stringify(v) : v));
+    const res = await fetch(API_URL + '?' + params.toString());
+    return res.json();
+  }
   const res = await fetch(API_URL, {
     method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify({ action, token, ...extra }),
   });
   return res.json();

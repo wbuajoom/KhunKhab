@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คุณคาบ — เช็กชื่อ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans Thai', sans-serif; background: #f9fafb; color: #111827; }
+
+  .nav { background: white; border-bottom: 1px solid #e5e7eb; padding: 0 16px; display: flex; align-items: center; gap: 12px; height: 56px; position: sticky; top: 0; z-index: 100; }
+  .btn-back { background: none; border: none; font-size: 20px; cursor: pointer; }
+  .nav-title { font-weight: 600; font-size: 16px; }
+  .nav-right { margin-left: auto; display: flex; gap: 8px; }
+
+  .main { max-width: 800px; margin: 0 auto; padding: 16px; }
+
+  /* Section selector */
+  .section-select { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .select-label { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
+  select { width: 100%; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-family: inherit; font-size: 14px; background: white; }
+
+  /* Stats bar */
+  .stats { display: flex; gap: 8px; margin-bottom: 16px; }
+  .stat { flex: 1; background: white; border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .stat-num { font-size: 24px; font-weight: 700; }
+  .stat-label { font-size: 11px; color: #6b7280; }
+  .stat.present .stat-num { color: #10b981; }
+  .stat.absent .stat-num { color: #ef4444; }
+  .stat.leave .stat-num { color: #f59e0b; }
+  .stat.late .stat-num { color: #8b5cf6; }
+
+  /* QR Button */
+  .qr-btn {
+    width: 100%; padding: 14px; background: #0d9488; color: white; border: none;
+    border-radius: 12px; font-family: inherit; font-size: 15px; font-weight: 600;
+    cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .qr-btn:hover { background: #0f766e; }
+
+  /* Bulk actions */
+  .bulk-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .btn-bulk {
+    flex: 1; min-width: 80px; padding: 10px 8px; border: 1px solid #e5e7eb;
+    border-radius: 10px; background: white; font-family: inherit; font-size: 13px;
+    cursor: pointer; font-weight: 500;
+  }
+  .btn-bulk:hover { border-color: #10b981; color: #10b981; }
+
+  /* Student list */
+  .student-card {
+    background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .stu-num { font-size: 13px; color: #9ca3af; width: 28px; text-align: center; }
+  .stu-info { flex: 1; }
+  .stu-name { font-size: 15px; font-weight: 500; }
+  .stu-nick { font-size: 12px; color: #6b7280; }
+  .status-btns { display: flex; gap: 4px; }
+  .s-btn {
+    padding: 6px 10px; border-radius: 8px; border: 1px solid #e5e7eb;
+    font-size: 12px; cursor: pointer; font-family: inherit; background: white;
+    transition: all 0.1s;
+  }
+  .s-btn.active-present { background: #dcfce7; border-color: #10b981; color: #065f46; font-weight: 600; }
+  .s-btn.active-absent  { background: #fee2e2; border-color: #ef4444; color: #991b1b; font-weight: 600; }
+  .s-btn.active-leave   { background: #fef3c7; border-color: #f59e0b; color: #92400e; font-weight: 600; }
+  .s-btn.active-late    { background: #ede9fe; border-color: #8b5cf6; color: #4c1d95; font-weight: 600; }
+
+  /* Save button */
+  .save-bar { position: sticky; bottom: 0; padding: 12px 16px; background: white; border-top: 1px solid #e5e7eb; }
+  .btn-save { width: 100%; padding: 14px; background: #10b981; color: white; border: none; border-radius: 12px; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
+  .btn-save:disabled { background: #9ca3af; cursor: not-allowed; }
+  .btn-save:hover:not(:disabled) { background: #059669; }
+
+  /* Toast */
+  .toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 10px 20px; border-radius: 10px; font-size: 14px; z-index: 999; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+
+  /* Scanner overlay */
+  .scanner-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+  .scanner-overlay.open { display: flex; }
+  #qr-video { width: 100%; max-width: 400px; border-radius: 16px; }
+  .scanner-frame { position: relative; width: 100%; max-width: 400px; }
+  .scanner-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 200px; height: 200px; border: 3px solid #10b981; border-radius: 16px; }
+  .scanner-title { color: white; font-size: 16px; margin-bottom: 16px; font-weight: 600; }
+  .scanner-status { color: #10b981; font-size: 14px; margin-top: 16px; min-height: 20px; }
+  .scanner-recent { color: #9ca3af; font-size: 13px; margin-top: 8px; }
+  .btn-close-scanner { margin-top: 20px; padding: 10px 24px; background: white; color: #111827; border: none; border-radius: 10px; font-family: inherit; font-size: 14px; cursor: pointer; font-weight: 500; }
+
+  .skeleton { background: #e5e7eb; border-radius: 12px; height: 60px; margin-bottom: 8px; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.5} }
+
+  @media (max-width: 480px) {
+    .s-btn { padding: 6px 7px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <button class="btn-back" onclick="window.location.href='dashboard.html'">←</button>
+  <div class="nav-title">เช็กชื่อนักเรียน</div>
+  <div class="nav-right">
+    <button class="btn-bulk" onclick="markAll('present')" style="font-size:11px;padding:6px 10px;">มาทั้งหมด</button>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="section-select">
+    <div class="select-label">วิชา/กลุ่มเรียน</div>
+    <select id="section-select" onchange="loadSection()">
+      <option value="">— เลือกวิชา —</option>
+    </select>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat present"><div class="stat-num" id="cnt-present">0</div><div class="stat-label">มา</div></div>
+    <div class="stat absent"><div class="stat-num" id="cnt-absent">0</div><div class="stat-label">ขาด</div></div>
+    <div class="stat leave"><div class="stat-num" id="cnt-leave">0</div><div class="stat-label">ลา</div></div>
+    <div class="stat late"><div class="stat-num" id="cnt-late">0</div><div class="stat-label">สาย</div></div>
+  </div>
+
+  <!-- QR Button -->
+  <button class="qr-btn" onclick="openScanner()">
+    📷 สแกน QR นักเรียน
+  </button>
+
+  <!-- Student list -->
+  <div id="roster-container">
+    <div style="text-align:center;color:#9ca3af;padding:32px">เลือกวิชาก่อนครับ</div>
+  </div>
+</main>
+
+<!-- Save bar -->
+<div class="save-bar">
+  <button class="btn-save" id="btn-save" onclick="saveAttendance()" disabled>
+    บันทึกการเช็กชื่อ
+  </button>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- QR Scanner overlay -->
+<div class="scanner-overlay" id="scanner-overlay">
+  <div class="scanner-title">📷 สแกน QR นักเรียน</div>
+  <div class="scanner-frame">
+    <video id="qr-video" autoplay playsinline muted></video>
+    <div class="scanner-box"></div>
+  </div>
+  <div class="scanner-status" id="scanner-status">พร้อมสแกน...</div>
+  <div class="scanner-recent" id="scanner-recent"></div>
+  <button class="btn-close-scanner" onclick="closeScanner()">ปิด</button>
+</div>
+
+<!-- jsQR library -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbzzjcklOEs2uKhuV198lVSwkvC3qbQx5HLpF5MucP1rI4AVzLfDYCOna514md5Y5tLL/exec';
+
+const token = localStorage.getItem('kk_token');
+if (!token) window.location.href = 'index.html';
+
+let roster = [];
+let currentSectionId = localStorage.getItem('kk_current_section') || '';
+let isDirty = false;
+let scanStream = null;
+let scanInterval = null;
+let lastScanned = '';
+let lastScannedTime = 0;
+
+// Load sections from bootstrap
+const bootstrap = JSON.parse(localStorage.getItem('kk_bootstrap') || '{}');
+const sections = bootstrap.mySections || [];
+
+function initSectionSelect() {
+  const sel = document.getElementById('section-select');
+  sections.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.courseSectionId;
+    opt.textContent = `${s.subjectName || s.subjectCode} — ${s.sectionName}`;
+    if (s.courseSectionId === currentSectionId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  if (currentSectionId) loadSection();
+}
+
+async function loadSection() {
+  const sel = document.getElementById('section-select');
+  currentSectionId = sel.value;
+  if (!currentSectionId) return;
+
+  document.getElementById('roster-container').innerHTML =
+    `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
+
+  try {
+    const res = await callAPI('getAttendanceRoster', { courseSectionId: currentSectionId });
+    if (!res.ok) throw new Error(res.error);
+    roster = res.roster;
+    isDirty = false;
+    renderRoster();
+    document.getElementById('btn-save').disabled = false;
+  } catch(err) {
+    document.getElementById('roster-container').innerHTML =
+      `<div style="text-align:center;color:#ef4444;padding:32px">${err.message}</div>`;
+  }
+}
+
+function renderRoster() {
+  updateStats();
+  const container = document.getElementById('roster-container');
+  if (!roster.length) {
+    container.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:32px">ไม่มีนักเรียนในวิชานี้</div>';
+    return;
+  }
+  container.innerHTML = roster.map((s, i) => `
+    <div class="student-card" id="card-${s.studentId}">
+      <div class="stu-num">${s.studentNumber || i+1}</div>
+      <div class="stu-info">
+        <div class="stu-name">${s.firstName} ${s.lastName}</div>
+        ${s.nickname ? `<div class="stu-nick">(${s.nickname})</div>` : ''}
+      </div>
+      <div class="status-btns">
+        <button class="s-btn ${s.status==='present'?'active-present':''}" onclick="setStatus('${s.studentId}','present')">มา</button>
+        <button class="s-btn ${s.status==='absent'?'active-absent':''}"  onclick="setStatus('${s.studentId}','absent')">ขาด</button>
+        <button class="s-btn ${s.status==='leave'?'active-leave':''}"   onclick="setStatus('${s.studentId}','leave')">ลา</button>
+        <button class="s-btn ${s.status==='late'?'active-late':''}"     onclick="setStatus('${s.studentId}','late')">สาย</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function setStatus(studentId, status) {
+  const stu = roster.find(s => s.studentId === studentId);
+  if (!stu) return;
+  stu.status = status;
+  isDirty = true;
+
+  // Update just this card's buttons
+  const card = document.getElementById('card-' + studentId);
+  if (card) {
+    card.querySelectorAll('.s-btn').forEach(btn => btn.className = 's-btn');
+    const map = { present: 'active-present', absent: 'active-absent', leave: 'active-leave', late: 'active-late' };
+    const labels = ['มา','ขาด','ลา','สาย'];
+    const statuses = ['present','absent','leave','late'];
+    card.querySelectorAll('.s-btn').forEach((btn, i) => {
+      if (statuses[i] === status) btn.classList.add(map[status]);
+    });
+  }
+  updateStats();
+}
+
+function markAll(status) {
+  if (!roster.length) return;
+  roster.forEach(s => s.status = status);
+  isDirty = true;
+  renderRoster();
+}
+
+function updateStats() {
+  const counts = { present: 0, absent: 0, leave: 0, late: 0 };
+  roster.forEach(s => { if (counts[s.status] !== undefined) counts[s.status]++; });
+  document.getElementById('cnt-present').textContent = counts.present;
+  document.getElementById('cnt-absent').textContent  = counts.absent;
+  document.getElementById('cnt-leave').textContent   = counts.leave;
+  document.getElementById('cnt-late').textContent    = counts.late;
+}
+
+async function saveAttendance() {
+  if (!currentSectionId || !roster.length) return;
+  const btn = document.getElementById('btn-save');
+  btn.disabled = true;
+  btn.textContent = 'กำลังบันทึก...';
+
+  try {
+    const records = roster.map(s => ({
+      studentId: s.studentId,
+      status: s.status,
+      method: 'manual',
+    }));
+    const res = await callAPI('saveAttendance', { courseSectionId: currentSectionId, records });
+    if (!res.ok) throw new Error(res.error);
+    isDirty = false;
+    showToast(`✅ บันทึกแล้ว ${res.saved} คน`);
+  } catch(err) {
+    showToast('❌ ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'บันทึกการเช็กชื่อ';
+  }
+}
+
+// ─── QR Scanner ──────────────────────────────────────────────
+
+async function openScanner() {
+  if (!currentSectionId) { showToast('เลือกวิชาก่อนครับ'); return; }
+  document.getElementById('scanner-overlay').classList.add('open');
+  try {
+    scanStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }
+    });
+    const video = document.getElementById('qr-video');
+    video.srcObject = scanStream;
+    scanInterval = setInterval(scanFrame, 200);
+  } catch(err) {
+    document.getElementById('scanner-status').textContent = 'ไม่สามารถเปิดกล้องได้: ' + err.message;
+  }
+}
+
+function closeScanner() {
+  document.getElementById('scanner-overlay').classList.remove('open');
+  if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
+  if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+}
+
+function scanFrame() {
+  const video = document.getElementById('qr-video');
+  if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const imageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+  const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+  if (!code) return;
+
+  const qrData = code.data;
+  const now = Date.now();
+
+  // Debounce — ไม่ scan ซ้ำภายใน 3 วินาที
+  if (qrData === lastScanned && now - lastScannedTime < 3000) return;
+  lastScanned = qrData;
+  lastScannedTime = now;
+
+  processQR(qrData);
+}
+
+async function processQR(qrData) {
+  document.getElementById('scanner-status').textContent = '🔍 กำลังตรวจสอบ...';
+
+  // Find student by qrToken in local roster first
+  const inRoster = roster.find(s => s.qrToken === qrData);
+  if (inRoster) {
+    setStatus(inRoster.studentId, 'present');
+    document.getElementById('scanner-status').textContent = '✅ ' + inRoster.firstName + ' ' + inRoster.lastName;
+    document.getElementById('scanner-recent').textContent = 'สแกนล่าสุด: ' + inRoster.firstName;
+    if (navigator.vibrate) navigator.vibrate(100);
+    return;
+  }
+
+  // Not in roster — resolve via API
+  try {
+    const res = await callAPI('resolveQR', { qrToken: qrData });
+    if (res.ok) {
+      document.getElementById('scanner-status').textContent = '⚠️ ' + res.student.firstName + ' ไม่อยู่ในวิชานี้';
+    } else {
+      document.getElementById('scanner-status').textContent = '❌ ไม่พบนักเรียน';
+    }
+  } catch(err) {
+    document.getElementById('scanner-status').textContent = '❌ ' + err.message;
+  }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────
+
+async function callAPI(action, extra = {}) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action, token, ...extra }),
+  });
+  return res.json();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Init
+initSectionSelect();
+</script>
+</body>
+</html>
